@@ -1,5 +1,6 @@
 import GameEngine.Core.GameEngine;
 import GameEngine.Core.gameObject.Obj.Button;
+import Helper.ColorPalette;
 
 import java.awt.*;
 
@@ -12,7 +13,7 @@ public class Main extends GameEngine {
 
     @Override
     public void init() {
-        setBackground(new Color(43, 135, 209));
+        setBackground(ColorPalette.BACKGROUND);
         objectManager.add(new UIManager());
     }
 
@@ -22,6 +23,7 @@ public class Main extends GameEngine {
 
 
     private void onClick(Button b) {
+
     }
 
     @Override
