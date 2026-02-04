@@ -48,7 +48,7 @@ public class LogicManager extends GameObject {
         if (mode == Mode.SHOW) {
             if (lastMode != Mode.SHOW) {
                 //Swichted to SHOW mode
-                Console.log("SHOW MODE");
+                Console.log("SHOW MODE - LEVEL " + (level + 1));
                 level++;
                 sequence.toFirst();
                 timer = Timer.create(this::showNextInSequence, flashDelay).start();
