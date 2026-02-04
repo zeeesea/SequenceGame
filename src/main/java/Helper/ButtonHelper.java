@@ -21,6 +21,7 @@ public class ButtonHelper {
         b.setColor(ColorPalette.BUTTON_BLUE);
         lightState = LightState.LIGHTUP;
     }
+
     public static void update(double deltaTime) {
         Iterator<ButtonHelper> iterator = buttonHelpers.iterator();
         while (iterator.hasNext()) {
@@ -28,13 +29,21 @@ public class ButtonHelper {
             bh.updateButtonLight(deltaTime, iterator);
         }
     }
+
     public static void setBigBlueButtons(ArrayList<Button> bigBlueButtons) {
         ButtonHelper.bigBlueButtons = bigBlueButtons;
     }
-    public static Button getRandomButton(){
+
+    public static Button getRandomButton() {
+        if (bigBlueButtons == null || bigBlueButtons.isEmpty()) {
+            return null;
+        }
         return bigBlueButtons.get(rand.nextInt(bigBlueButtons.size()));
     }
+
     public static void flash(Button b) {
+        if (b == null) return;
+
         for (ButtonHelper bh : buttonHelpers) {
             if (bh.b == b) return;
         }
@@ -47,8 +56,8 @@ public class ButtonHelper {
     private float timer = 0f;
 
     private enum LightState {NONE, LIGHTUP, LIGHTDOWN}
-    private LightState lightState;
 
+    private LightState lightState;
 
     private void updateButtonLight(double deltaTime, Iterator<ButtonHelper> iterator) {
         if (b == null || lightState == LightState.NONE) {
@@ -60,9 +69,9 @@ public class ButtonHelper {
         float t = MathUtils.clamp(timer / lightDuration, 0f, 1f);
 
         if (lightState == LightState.LIGHTUP) {
-            Color c = MathUtils.lerpColor(ColorPalette.BUTTON_BLUE,ColorPalette.BUTTON_LIGHT,t);
+            Color c = MathUtils.lerpColor(ColorPalette.BUTTON_BLUE, ColorPalette.BUTTON_LIGHT, t);
             b.setColor(c);
-            if(t >= 1f) {
+            if (t >= 1f) {
                 lightState = LightState.LIGHTDOWN;
                 b.setColor(ColorPalette.BUTTON_LIGHT);
                 timer = 0f;
