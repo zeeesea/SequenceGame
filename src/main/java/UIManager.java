@@ -1,4 +1,3 @@
-import GameEngine.Core.GameEngine;
 import GameEngine.Core.gameObject.GameObject;
 import GameEngine.Core.gameObject.Obj.Button;
 import GameEngine.Core.gameObject.Obj.Slider;
@@ -26,16 +25,18 @@ public class UIManager extends GameObject {
     private enum Mode {CLICK, SHOW}
     private enum GameMode {NORMAL,SPEED,REVERSE}
 
+
     @Override
     public void init() {
-        logicManager = objectManager.get(LogicManager.class);
+        logicManager = new LogicManager(this, bigBlueButtons);
+        objectManager.add(logicManager);
+
         setupBigButtons();
         setupButtonCountSlider();
     }
 
     private void setupBigButtons() {
         int buttonSize;
-        int yOffset;
         Vector2 gridOffset;
 
         // Remove old buttons
@@ -49,21 +50,23 @@ public class UIManager extends GameObject {
 
         gridOffset = new Vector2((float) getScreenWidth() / 2, (float) (getScreenHeight() - buttonGridSize) /2);
 
+        int currentBtn = 0;
         //Create Buttons
         int y = gridOffset.yToInt();
         int x = gridOffset.xToInt();
         for (int i = 0; i < buttonCount; i++) {
             for (int j = 0; j < buttonCount; j++) {
+                currentBtn++;
                 Button b = new Button.Builder()
                         .cornerRadius(10)
                         .rect(new Rectangle(x,y, buttonSize, buttonSize))
                         .color(ColorPalette.BUTTON_BLUE)
                         .smoothHover(5, 100)
-                        .border(ColorPalette.TEXT_ALT, 3)
-                        .onHover(this::onHover)
+                        .border(ColorPalette.TEXT_ALT, 5)
+                        .tag(Integer.toString(currentBtn))
                         .font(new Font("Arial", Font.BOLD, 26))
                         .textColor(Color.WHITE)
-                        .onClick(logicManager::onClick)
+                        .onClick(this::onClick)
                         .build();
                 bigBlueButtons.add(b);
                 objectManager.add(b);
@@ -100,22 +103,8 @@ public class UIManager extends GameObject {
     public void update(double v) {
     }
     private void onClick(Button b) {
-        Console.log(b);
         if (logicManager != null) {
-            logicManager.onClick();
-        }
-    }
-
-    public void onHEHEHEHA() {
-        Console.log("HEHEHEHA");
-    }
-    private void onHover(Button b, boolean t) {
-        if (t) {
-            //Hovered
-            b.setColor(ColorPalette.BUTTON_HOVER);
-        } else {
-            //Not Hovered
-            b.setColor(ColorPalette.BUTTON_BLUE);
+            logicManager.onClick(b);
         }
     }
     @Override
@@ -125,4 +114,7 @@ public class UIManager extends GameObject {
     public void onCollision(GameObject gameObject) {
 
     }
+
+
+    //Getter/Setter
 }

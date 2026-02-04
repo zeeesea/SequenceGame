@@ -25,7 +25,7 @@
         <dependency>
             <groupId>com.github.zeeesea</groupId>
             <artifactId>GameEngine</artifactId>
-            <version>6b27af7</version>
+            <version>dbcd367</version>
         </dependency>
     </dependencies>
 
