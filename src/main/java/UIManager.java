@@ -22,15 +22,13 @@ public class UIManager extends GameObject {
     private int buttonMargin = 25;
     private int buttonGridSize = 650;
 
+    //Settings UI - LEFT
 
-    private enum Mode {CLICK, SHOW}
-    private enum GameMode {NORMAL,SPEED,REVERSE}
 
 
     @Override
     public void init() {
-        logicManager = new LogicManager(this, bigBlueButtons);
-        objectManager.add(logicManager);
+        logicManager = objectManager.get(LogicManager.class);
 
         setupBigButtons();
         setupButtonCountSlider();
@@ -70,7 +68,7 @@ public class UIManager extends GameObject {
                         .tag(Integer.toString(currentBtn))
                         .font(new Font("Arial", Font.BOLD, 26))
                         .textColor(Color.WHITE)
-                        .onClick(this::onClick)
+                        .onClick(this::onClickBig)
                         .build();
                 bigBlueButtons.append(b);
                 objectManager.add(b);
@@ -89,7 +87,7 @@ public class UIManager extends GameObject {
                 .borderColor(ColorPalette.TEXT_ALT)
                 .handleShape(Slider.HandleShape.CIRCLE)
                 .handleColor(ColorPalette.BUTTON_BLUE)
-                .range(2, 5)
+                .range(2,5)
                 .onDragEndValue(this::onCountSliderValueChange)
                 .build();
         objectManager.add(buttonCountSlider);
@@ -99,26 +97,26 @@ public class UIManager extends GameObject {
 
     private void onCountSliderValueChange(float v) {
         buttonCount = (int) v;
-        Console.log(buttonCount);
         setupBigButtons();
     }
+    private void onClickBig(Button b) {
+        if (logicManager != null) {
+            logicManager.onClickBig(b);
+        }
+    }
+    //Getter/Setter
+    public List<Button> getBigBlueButtons() {
+        return bigBlueButtons;
+    }
+
 
     @Override
     public void update(double v) {
-    }
-    private void onClick(Button b) {
-        if (logicManager != null) {
-            logicManager.onClick(b);
-        }
     }
     @Override
     public void draw(Graphics2D graphics2D) {
     }
     @Override
     public void onCollision(GameObject gameObject) {
-
     }
-
-
-    //Getter/Setter
 }

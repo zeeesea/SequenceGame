@@ -127,7 +127,7 @@ public class List<T> {
         return this;
     }
     public List<T> next() {
-        if (first == null || current == null || current == last) return this;
+        if (first == null || current == null) return this;
         current = current.next;
         return this;
     }
@@ -147,6 +147,11 @@ public class List<T> {
 
     public int size() {
         return size;
+    }
+
+    public boolean isLast() {
+        if (isEmpty()) return false;
+        return current == last;
     }
 
     public ArrayList<T> toArrayList() {

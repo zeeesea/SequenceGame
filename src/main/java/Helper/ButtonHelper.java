@@ -44,8 +44,14 @@ public class ButtonHelper {
     public static void flash(Button b) {
         if (b == null) return;
 
-        for (ButtonHelper bh : buttonHelpers) {
-            if (bh.b == b) return;
+        Iterator<ButtonHelper> iterator = buttonHelpers.iterator();
+        while (iterator.hasNext()) {
+            ButtonHelper bh = iterator.next();
+            if (bh.b == b) {
+                bh.b.setColor(ColorPalette.BUTTON_BLUE);
+                iterator.remove();
+                break;
+            }
         }
         ButtonHelper bh = new ButtonHelper(b);
         buttonHelpers.add(bh);
