@@ -4,6 +4,7 @@ import GameEngine.Core.gameObject.Obj.Slider;
 import GameEngine.Core.util.Console.Console;
 import GameEngine.Core.util.Vector2;
 import Helper.ColorPalette;
+import Helper.List;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -13,7 +14,7 @@ public class UIManager extends GameObject {
     private LogicManager logicManager;
 
     //UI Elements
-    private ArrayList<Button> bigBlueButtons = new ArrayList<>();
+    private List<Button> bigBlueButtons = new List<Button>();
     private Slider buttonCountSlider;
 
     //Button Grid - RIGHT
@@ -40,7 +41,8 @@ public class UIManager extends GameObject {
         Vector2 gridOffset;
 
         // Remove old buttons
-        for (Button b : bigBlueButtons) {
+        for (int i = 0; i < bigBlueButtons.size(); i++) {
+            Button b = bigBlueButtons.next().getContent();
             objectManager.remove(b);
         }
         bigBlueButtons.clear();
@@ -68,7 +70,7 @@ public class UIManager extends GameObject {
                         .textColor(Color.WHITE)
                         .onClick(this::onClick)
                         .build();
-                bigBlueButtons.add(b);
+                bigBlueButtons.append(b);
                 objectManager.add(b);
 
                 x += buttonSize + buttonMargin;

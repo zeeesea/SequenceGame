@@ -1,5 +1,9 @@
 package Helper;
 
+import GameEngine.Core.gameObject.Obj.Button;
+
+import java.util.ArrayList;
+
 public class List<T> {
     //Variables
     private Node<T> first;
@@ -112,21 +116,25 @@ public class List<T> {
         size--;
         return temp.data;
     }
-    public void toFirst() {
-        if (first == null || current == first) return;
+    public List<T> toFirst() {
+        if (first == null || current == first) return this;
         current = first;
+        return this;
     }
-    public void toLast() {
-        if (first == null || current == last) return;
-        current =  last;
+    public List<T> toLast() {
+        if (first == null || current == last) return this;
+        current = last;
+        return this;
     }
-    public void next() {
-        if (first == null || current == null || current == last) return;
+    public List<T> next() {
+        if (first == null || current == null || current == last) return this;
         current = current.next;
+        return this;
     }
-    public void prev() {
-        if (first == null || current == null || current == first) return;
+    public List<T> prev() {
+        if (first == null || current == null || current == first) return this;
         current = current.prev;
+        return this;
     }
     public void setContent(T value){
         if (first == null || current == null) return;
@@ -139,5 +147,23 @@ public class List<T> {
 
     public int size() {
         return size;
+    }
+
+    public ArrayList<T> toArrayList() {
+        ArrayList<T> arrayList = new ArrayList<>();
+        Node<T> temp = first;
+        while (temp != null){
+            arrayList.add(temp.data);
+            temp = temp.next;
+        }
+        return arrayList;
+    }
+
+    public static List fromArrayList(java.util.List<Button> list){
+        List<Button> customList = new List<>();
+        for (Button obj : list){
+            customList.append(obj);
+        }
+        return customList;
     }
 }
