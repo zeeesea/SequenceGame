@@ -41,9 +41,11 @@ public class UIManager extends GameObject {
         Vector2 gridOffset;
 
         // Remove old buttons
+        bigBlueButtons.toFirst();
         for (int i = 0; i < bigBlueButtons.size(); i++) {
-            Button b = bigBlueButtons.next().getContent();
+            Button b = bigBlueButtons.getContent();
             objectManager.remove(b);
+            bigBlueButtons.next();
         }
         bigBlueButtons.clear();
 
