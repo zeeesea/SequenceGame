@@ -11,10 +11,16 @@ public class Main extends GameEngine {
         GameEngine.launch(new Main());
     }
 
+    //References
+    UIManager uiManager;
+    LogicManager logicManager;
+
     @Override
     public void init() {
         setBackground(ColorPalette.BACKGROUND);
+
         objectManager.add(new UIManager());
+        objectManager.add(new LogicManager());
     }
 
     @Override

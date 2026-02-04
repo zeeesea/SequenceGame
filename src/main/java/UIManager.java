@@ -10,11 +10,14 @@ import java.awt.*;
 import java.util.ArrayList;
 
 public class UIManager extends GameObject {
+    //References
+    private LogicManager logicManager;
+
     //UI Elements
     private ArrayList<Button> bigBlueButtons = new ArrayList<>();
     private Slider buttonCountSlider;
 
-    //Button Grid
+    //Button Grid - RIGHT
     private int buttonCount = 3;
     private int buttonMargin = 25;
     private int buttonGridSize = 650;
@@ -25,6 +28,7 @@ public class UIManager extends GameObject {
 
     @Override
     public void init() {
+        logicManager = objectManager.get(LogicManager.class);
         setupBigButtons();
         setupButtonCountSlider();
     }
@@ -59,7 +63,7 @@ public class UIManager extends GameObject {
                         .onHover(this::onHover)
                         .font(new Font("Arial", Font.BOLD, 26))
                         .textColor(Color.WHITE)
-                        .onClick(this::onClick)
+                        .onClick(logicManager::onClick)
                         .build();
                 bigBlueButtons.add(b);
                 objectManager.add(b);
@@ -96,6 +100,14 @@ public class UIManager extends GameObject {
     public void update(double v) {
     }
     private void onClick(Button b) {
+        Console.log(b);
+        if (logicManager != null) {
+            logicManager.onClick();
+        }
+    }
+
+    public void onHEHEHEHA() {
+        Console.log("HEHEHEHA");
     }
     private void onHover(Button b, boolean t) {
         if (t) {
