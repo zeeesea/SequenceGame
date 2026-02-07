@@ -1,5 +1,6 @@
 package Helper;
 
+import GameEngine.Core.gameObject.GameObject;
 import GameEngine.Core.gameObject.Obj.Button;
 import GameEngine.Core.util.MathUtils;
 
@@ -15,12 +16,14 @@ public class ButtonHelper {
 
     public static float lightDuration = 0.8f;
 
-    private ButtonHelper(Button b) {
+    private ButtonHelper(Button b, Color color) {
         this.b = b;
         timer = 0f;
         b.setColor(ColorPalette.BUTTON_BLUE);
         lightState = LightState.LIGHTUP;
+        toColor = color;
     }
+
 
     public static void update(double deltaTime) {
         Iterator<ButtonHelper> iterator = buttonHelpers.iterator();
@@ -33,7 +36,6 @@ public class ButtonHelper {
     public static void setBigBlueButtons(ArrayList<Button> bigBlueButtons) {
         ButtonHelper.bigBlueButtons = bigBlueButtons;
     }
-
     public static Button getRandomButton() {
         if (bigBlueButtons == null || bigBlueButtons.isEmpty()) {
             return null;
@@ -42,7 +44,10 @@ public class ButtonHelper {
     }
 
     public static void flash(Button b) {
-        if (b == null) return;
+        flash(b, ColorPalette.BUTTON_LIGHT);
+    }
+    public static void flash(Button b, Color color) {
+        if (b == null || color == null) return;
 
         Iterator<ButtonHelper> iterator = buttonHelpers.iterator();
         while (iterator.hasNext()) {
@@ -53,12 +58,13 @@ public class ButtonHelper {
                 break;
             }
         }
-        ButtonHelper bh = new ButtonHelper(b);
+        ButtonHelper bh = new ButtonHelper(b, color);
         buttonHelpers.add(bh);
     }
 
-    //Flash Variables
+    // ----------------- Flash Logic ------------------
     private Button b;
+    private Color toColor;
     private float timer = 0f;
 
     private enum LightState {NONE, LIGHTUP, LIGHTDOWN}
@@ -75,15 +81,15 @@ public class ButtonHelper {
         float t = MathUtils.clamp(timer / lightDuration, 0f, 1f);
 
         if (lightState == LightState.LIGHTUP) {
-            Color c = MathUtils.lerpColor(ColorPalette.BUTTON_BLUE, ColorPalette.BUTTON_LIGHT, t);
+            Color c = MathUtils.lerpColor(ColorPalette.BUTTON_BLUE, toColor, t);
             b.setColor(c);
             if (t >= 1f) {
                 lightState = LightState.LIGHTDOWN;
-                b.setColor(ColorPalette.BUTTON_LIGHT);
+                b.setColor(toColor);
                 timer = 0f;
             }
         } else if (lightState == LightState.LIGHTDOWN) {
-            Color c = MathUtils.lerpColor(ColorPalette.BUTTON_LIGHT, ColorPalette.BUTTON_BLUE, t);
+            Color c = MathUtils.lerpColor(toColor, ColorPalette.BUTTON_BLUE, t);
             b.setColor(c);
             if (t >= 1f) {
                 lightState = LightState.NONE;

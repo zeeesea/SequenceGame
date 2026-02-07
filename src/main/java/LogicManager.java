@@ -1,32 +1,44 @@
 import GameEngine.Core.gameObject.GameObject;
 import GameEngine.Core.gameObject.Obj.Button;
-import GameEngine.Core.input.Input;
 import GameEngine.Core.util.Console.Console;
 import GameEngine.Core.util.Timer.Timer;
 import Helper.ButtonHelper;
+import Helper.ColorPalette;
 import Helper.List;
 
 import java.awt.*;
 
 public class LogicManager extends GameObject {
 
-    //References
+    // ----------------- References --------------------
     private UIManager uiManager;
     private List<Button> bigBlueButtons;
     private List<Button> sequence;
 
-    //Game Variables
+    // ----------------- Game Variables ----------------
+
+    // Values --Normal Mode--
+    private float defaultLightDuration = 0.28f;
+    private float defaultFlashDelay = 0.45f;
+    private float defaultLevelDelay = 0.6f;
+    //Values --Speed Mode--
+    private float speedLightDuration = 0.16f;
+    private float speedFlashDelay = 0.24f;
+    private float speedLevelDelay = 0.4f;
+
     private int level = 0;
-    private float lightDuration = 0.3f;
-    private float flashDelay = 0.8f;
+    private float lightDuration = defaultLightDuration;
+    private float flashDelay = defaultFlashDelay;
+    private float levelDelay = defaultLevelDelay;
     Timer timer;
 
 
-    //Modes
-    private enum Mode {NONE,CLICK, SHOW}
+    // ----------------- Modes -------------------------
+    private enum Mode {NONE,CLICK,SHOW}
     private enum GameMode {NORMAL,SPEED,REVERSE}
-    private Mode mode = Mode.SHOW;
+    private Mode mode = Mode.NONE;
     private Mode lastMode = Mode.NONE;
+    private GameMode setGameMode = GameMode.NORMAL;
     private GameMode gameMode = GameMode.NORMAL;
 
 
@@ -42,27 +54,55 @@ public class LogicManager extends GameObject {
     @Override
     public void update(double deltaTime) {
         ButtonHelper.update(deltaTime);
-        if(Input.getMouseButtonDown(Input.MouseCode.LEFT)) {
-            mode = Mode.SHOW;
-        }
+
         if (mode == Mode.SHOW) {
             if (lastMode != Mode.SHOW) {
-                //Swichted to SHOW mode
-                Console.log("SHOW MODE - LEVEL " + (level + 1));
+                //Switched to SHOW mode
+                updateGameModeSettings();
                 level++;
+                updateLevel(level);
+                Console.log("SHOW MODE - LEVEL " + (level));
                 sequence.toFirst();
                 timer = Timer.create(this::showNextInSequence, flashDelay).start();
             }
         } else if (mode == Mode.CLICK) {
-
-
+            if (lastMode != Mode.CLICK) {
+                //Switched to CLICK mode
+                Console.log("CLICK MODE - LEVEL " + (level));
+                if (gameMode == GameMode.REVERSE) {
+                    sequence.toLast();
+                } else {
+                    sequence.toFirst();
+                }
+            }
         } else {
-
+            if (lastMode != Mode.NONE) {
+                //Switched to NONE mode
+                Console.log("NONE MODE");
+            }
         }
         lastMode = mode;
     }
 
 
+    private void updateGameModeSettings() {
+        gameMode = setGameMode;
+        switch (gameMode) {
+            case NORMAL: {
+                lightDuration = defaultLightDuration;
+                flashDelay = defaultFlashDelay;
+                levelDelay = defaultLevelDelay;
+                break;
+            }
+            case SPEED: {
+                lightDuration = speedLightDuration;
+                flashDelay = speedFlashDelay;
+                levelDelay = speedLevelDelay;
+                break;
+            }
+        }
+        ButtonHelper.lightDuration = lightDuration;
+    }
     private void showNextInSequence() {
         if (sequence == null || sequence.isEmpty() || !sequence.hasAccess()) {
             addToSequence();
@@ -82,18 +122,73 @@ public class LogicManager extends GameObject {
             mode = Mode.CLICK;
         }
     }
-
+    private void updateLevel(int lvl) {
+        uiManager.getLevelText().setText("Level " + lvl);
+    }
+    private void lost(Button b) {
+        for (Button bu : bigBlueButtons) {
+            ButtonHelper.flash(bu, ColorPalette.WRONG_BUTTON);
+        }
+        clear();
+        Console.log("LOST");
+    }
+    private void clear() {
+        mode = Mode.NONE;
+        sequence.clear();
+        level = 0;
+        updateLevel(level);
+        bigBlueButtons = uiManager.getBigBlueButtons();
+        ButtonHelper.setBigBlueButtons(bigBlueButtons.toArrayList());
+    }
+    public void startButtonSequence() {
+        clear();
+        mode = Mode.SHOW;
+    }
 
 
     //Event Handlers
     public void onClickBig(Button b) {
-        // Falls das UI gerade rebuilt wurde
-        ButtonHelper.setBigBlueButtons(bigBlueButtons.toArrayList());
-
-        Button random = ButtonHelper.getRandomButton();
-        if (random != null) {
-            ButtonHelper.flash(random);
+        if (mode != Mode.CLICK || sequence.isEmpty() || !sequence.hasAccess()) return;
+        Button expected = sequence.getContent();
+        if (b == expected) {
+            ButtonHelper.flash(b);
+            if (gameMode == GameMode.REVERSE) {
+                sequence.prev();
+            } else {
+                sequence.next();
+            }
+            //Check if sequence is finished
+            if (!sequence.hasAccess()) {
+                mode = Mode.NONE;
+                Timer.create(() -> mode = Mode.SHOW, levelDelay, false).start();
+            }
+        } else {
+            lost(b);
         }
+
+    }
+    public void onCountSliderValueChange(float newButtonCount) {
+        newButtonCount = Math.round(newButtonCount);
+        if ((int)newButtonCount == uiManager.getButtonCount()) return;
+        uiManager.setButtonCount((int)newButtonCount);
+        uiManager.setupBigButtons();
+        clear();
+    }
+    public void onStartButtonClick() {
+        startButtonSequence();
+    }
+    public void onModeDropdownChanged(int index) {
+        GameMode selectedMode = GameMode.values()[index];
+        if (selectedMode == setGameMode) return;
+        setGameMode = selectedMode;
+        updateGameModeSettings();
+        Console.log("GAMEMODE: " + setGameMode);
+    }
+
+    @Override
+    public void onWindowResized(int width, int height) {
+        uiManager.setupBigButtons();
+        clear();
     }
 
     //Getter/Setter

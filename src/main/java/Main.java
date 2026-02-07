@@ -1,6 +1,8 @@
 import GameEngine.Core.GameEngine;
+import GameEngine.Core.input.Input;
 import Helper.ColorPalette;
 
+import javax.swing.*;
 import java.awt.*;
 
 
@@ -13,6 +15,8 @@ public class Main extends GameEngine {
     @Override
     public void init() {
         setBackground(ColorPalette.BACKGROUND);
+        setTitle("SEQUENCE GAME");
+        setIconFromSprite("icon");
 
         objectManager.add(new UIManager());
         objectManager.add(new LogicManager());
@@ -20,6 +24,12 @@ public class Main extends GameEngine {
 
     @Override
     protected void update() {
+        if (Input.getKeyDown(Input.KeyCode.ESCAPE)) {
+            System.exit(0);
+        }
+        if (Input.getKeyDown(Input.KeyCode.F11)) {
+            toggleFullscreen();
+        }
     }
 
     @Override

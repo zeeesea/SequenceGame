@@ -3,8 +3,9 @@ package Helper;
 import GameEngine.Core.gameObject.Obj.Button;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
-public class List<T> {
+public class List<T> implements Iterable<T> {
     //Variables
     private Node<T> first;
     private Node<T> last;
@@ -132,7 +133,7 @@ public class List<T> {
         return this;
     }
     public List<T> prev() {
-        if (first == null || current == null || current == first) return this;
+        if (first == null || current == null) return this;
         current = current.prev;
         return this;
     }
@@ -164,11 +165,30 @@ public class List<T> {
         return arrayList;
     }
 
-    public static List fromArrayList(java.util.List<Button> list){
-        List<Button> customList = new List<>();
-        for (Button obj : list){
+    public static <T> List<T> fromArrayList(java.util.List<T> list){
+        List<T> customList = new List<>();
+        for (T obj : list){
             customList.append(obj);
         }
         return customList;
+    }
+
+    @Override
+    public Iterator<T> iterator() {
+        return new Iterator<T>() {
+            private Node<T> cursor = first;
+
+            @Override
+            public boolean hasNext() {
+                return cursor != null;
+            }
+
+            @Override
+            public T next() {
+                T value = cursor.data;
+                cursor = cursor.next;
+                return value;
+            }
+        };
     }
 }
