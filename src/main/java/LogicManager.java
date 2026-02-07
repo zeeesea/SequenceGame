@@ -1,3 +1,5 @@
+import GameEngine.Core.audio.SFXEngine;
+import GameEngine.Core.audio.SFXPlayer;
 import GameEngine.Core.gameObject.GameObject;
 import GameEngine.Core.gameObject.Obj.Button;
 import GameEngine.Core.util.Console.Console;
@@ -41,6 +43,8 @@ public class LogicManager extends GameObject {
     private GameMode setGameMode = GameMode.NORMAL;
     private GameMode gameMode = GameMode.NORMAL;
 
+    SFXPlayer sfx = new SFXPlayer();
+
 
     @Override
     public void init() {
@@ -49,6 +53,12 @@ public class LogicManager extends GameObject {
         this.sequence = new List<>();
         ButtonHelper.lightDuration = lightDuration;
         ButtonHelper.setBigBlueButtons(bigBlueButtons.toArrayList());
+
+        sfx.loadSFX("bum");
+        sfx.loadSFX("blocked");
+        sfx.loadSFX("wrong");
+        sfx.loadSFX("levelup");
+        objectManager.add(sfx);
     }
 
     @Override
@@ -126,6 +136,7 @@ public class LogicManager extends GameObject {
         uiManager.getLevelText().setText("Level " + lvl);
     }
     private void lost(Button b) {
+        sfx.play("wrong", 0.5f);
         for (Button bu : bigBlueButtons) {
             ButtonHelper.flash(bu, ColorPalette.WRONG_BUTTON);
         }
@@ -148,7 +159,10 @@ public class LogicManager extends GameObject {
 
     //Event Handlers
     public void onClickBig(Button b) {
-        if (mode != Mode.CLICK || sequence.isEmpty() || !sequence.hasAccess()) return;
+        if (mode != Mode.CLICK || sequence.isEmpty() || !sequence.hasAccess()) {
+            sfx.play("blocked", 0.5f);
+            return;
+        }
         Button expected = sequence.getContent();
         if (b == expected) {
             ButtonHelper.flash(b);
@@ -160,7 +174,10 @@ public class LogicManager extends GameObject {
             //Check if sequence is finished
             if (!sequence.hasAccess()) {
                 mode = Mode.NONE;
+                sfx.play("levelup");
                 Timer.create(() -> mode = Mode.SHOW, levelDelay, false).start();
+            } else {
+                sfx.play("bum", 0.5f);
             }
         } else {
             lost(b);
