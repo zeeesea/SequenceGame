@@ -26,8 +26,7 @@ public class Main extends GameEngine {
     protected void update() {
         if (Input.getKeyDown(Input.KeyCode.ESCAPE)) {
             System.exit(0);
-        }
-        if (Input.getKeyDown(Input.KeyCode.F11)) {
+        } else if (Input.getKeyDown(Input.KeyCode.F11)) {
             toggleFullscreen();
         }
     }

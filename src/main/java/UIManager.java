@@ -35,7 +35,7 @@ public class UIManager extends GameObject {
     private Button startButton;
     private Button submitButton;
     private Text highscoresDescriptionText;
-    private Text bestlistText;
+    private Text leaderBoardText;
     private Text debugModeText;
     private Text titleText;
     private Text levelText;
@@ -199,7 +199,7 @@ public class UIManager extends GameObject {
                 .fillColor(ColorPalette.BORDER)
                 .backgroundColor(ColorPalette.BUTTON_LIGHT)
                 .handleColor(ColorPalette.BUTTON_BLUE)
-                .range(2,5)
+                .range(2, 10)
                 .onDragEndValue(this::onCountSliderValueChange)
                 .build();
         objectManager.add(buttonCountSlider);
@@ -247,6 +247,7 @@ public class UIManager extends GameObject {
                 .focusedBorderColor(ColorPalette.BORDER)
                 .textColor(ColorPalette.TEXT_MAIN)
                 .cornerRadius(8)
+                .onUnfocus(this::onNameUnfocus)
                 .placeholder("Name")
                 .build();
         objectManager.add(nameInputField);
@@ -271,12 +272,12 @@ public class UIManager extends GameObject {
                 .build();
         objectManager.add(highscoresDescriptionText);
 
-        bestlistText = new Text.Builder("Bestlist")
+        leaderBoardText = new Text.Builder("Leaderboard")
                 .position(new Vector2(scale(529, scaleX), scale(118, scaleY)))
                 .color(ColorPalette.TEXT_MAIN)
                 .font(new Font("Arial", Font.BOLD, scaleFont(28, fontScale)))
                 .build();
-        objectManager.add(bestlistText);
+        objectManager.add(leaderBoardText);
 
         debugModeText = new Text.Builder("Enable debug mode for this feature")
                 .position(new Vector2(scale(50, scaleX), scale(785, scaleY)))
@@ -316,6 +317,11 @@ public class UIManager extends GameObject {
             logicManager.onModeDropdownChanged(index);
         }
     }
+    private void onNameUnfocus() {
+        if (logicManager != null) {
+            logicManager.onNameUnfocus(nameInputField.getText());
+        }
+    }
     //Getter/Setter
     public List<Button> getBigBlueButtons() {
         return bigBlueButtons;
@@ -339,8 +345,8 @@ public class UIManager extends GameObject {
     public Text getDebugModeText() {
         return debugModeText;
     }
-    public Text getBestlistText() {
-        return bestlistText;
+    public Text getLeaderBoardText() {
+        return leaderBoardText;
     }
     public Text getHighscoresDescriptionText() {
         return highscoresDescriptionText;
@@ -357,7 +363,7 @@ public class UIManager extends GameObject {
     }
 
     private void rebuildUI() {
-        // Entferne alte Left UI Elemente
+
         if (background1 != null) objectManager.remove(background1);
         if (background2 != null) objectManager.remove(background2);
         if (background3 != null) objectManager.remove(background3);
@@ -372,14 +378,12 @@ public class UIManager extends GameObject {
         if (nameInputField != null) objectManager.remove(nameInputField);
         if (submitButton != null) objectManager.remove(submitButton);
         if (highscoresDescriptionText != null) objectManager.remove(highscoresDescriptionText);
-        if (bestlistText != null) objectManager.remove(bestlistText);
+        if (leaderBoardText != null) objectManager.remove(leaderBoardText);
         if (debugModeText != null) objectManager.remove(debugModeText);
 
-        // Baue UI neu auf
         setupBigButtons();
         setupLeftUI();
 
-        // Informiere LogicManager über die neuen Buttons
         if (logicManager != null) {
             logicManager.setBigBlueButtons(bigBlueButtons);
         }

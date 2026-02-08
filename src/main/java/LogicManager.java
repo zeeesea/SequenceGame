@@ -1,3 +1,4 @@
+import GameEngine.Core.GameEngine;
 import GameEngine.Core.audio.SFXEngine;
 import GameEngine.Core.audio.SFXPlayer;
 import GameEngine.Core.gameObject.GameObject;
@@ -6,8 +7,11 @@ import GameEngine.Core.util.Console.Console;
 import GameEngine.Core.util.Timer.Timer;
 import Helper.ButtonHelper;
 import Helper.ColorPalette;
+import Helper.GameMode;
+import Helper.Leaderboard;
 import Helper.List;
 
+import javax.swing.*;
 import java.awt.*;
 
 public class LogicManager extends GameObject {
@@ -16,17 +20,30 @@ public class LogicManager extends GameObject {
     private UIManager uiManager;
     private List<Button> bigBlueButtons;
     private List<Button> sequence;
+    SFXPlayer sfx = new SFXPlayer();
 
     // ----------------- Game Variables ----------------
 
-    // Values --Normal Mode--
-    private float defaultLightDuration = 0.28f;
-    private float defaultFlashDelay = 0.45f;
-    private float defaultLevelDelay = 0.6f;
-    //Values --Speed Mode--
-    private float speedLightDuration = 0.16f;
-    private float speedFlashDelay = 0.24f;
-    private float speedLevelDelay = 0.4f;
+    // Player
+    private String name = "";
+    private double averageClickSpeed;
+    private long lastClickTime;
+    private double totalClickTime;
+    private int clickCount;
+
+    private double gameTime;
+    private long gameStartTime;
+    private boolean gameActive;
+
+
+    // Values -- Normal Mode --
+    private final float defaultLightDuration = 0.28f;
+    private final float defaultFlashDelay = 0.45f;
+    private final float defaultLevelDelay = 0.6f;
+    // Values  -- Speed Mode --
+    private final float speedLightDuration = 0.16f;
+    private final float speedFlashDelay = 0.24f;
+    private final float speedLevelDelay = 0.4f;
 
     private int level = 0;
     private float lightDuration = defaultLightDuration;
@@ -36,15 +53,11 @@ public class LogicManager extends GameObject {
 
 
     // ----------------- Modes -------------------------
-    private enum Mode {NONE,CLICK,SHOW}
-    private enum GameMode {NORMAL,SPEED,REVERSE}
+    public enum Mode {NONE,CLICK,SHOW}
     private Mode mode = Mode.NONE;
     private Mode lastMode = Mode.NONE;
     private GameMode setGameMode = GameMode.NORMAL;
     private GameMode gameMode = GameMode.NORMAL;
-
-    SFXPlayer sfx = new SFXPlayer();
-
 
     @Override
     public void init() {
@@ -53,6 +66,7 @@ public class LogicManager extends GameObject {
         this.sequence = new List<>();
         ButtonHelper.lightDuration = lightDuration;
         ButtonHelper.setBigBlueButtons(bigBlueButtons.toArrayList());
+        Leaderboard.init();
 
         sfx.loadSFX("bum");
         sfx.loadSFX("blocked");
@@ -79,6 +93,7 @@ public class LogicManager extends GameObject {
             if (lastMode != Mode.CLICK) {
                 //Switched to CLICK mode
                 Console.log("CLICK MODE - LEVEL " + (level));
+                resetClickTimer(); // Timer für Reaktionszeit starten
                 if (gameMode == GameMode.REVERSE) {
                     sequence.toLast();
                 } else {
@@ -93,7 +108,6 @@ public class LogicManager extends GameObject {
         }
         lastMode = mode;
     }
-
 
     private void updateGameModeSettings() {
         gameMode = setGameMode;
@@ -135,15 +149,69 @@ public class LogicManager extends GameObject {
     private void updateLevel(int lvl) {
         uiManager.getLevelText().setText("Level " + lvl);
     }
+
+    // ----------------- Timer Methods ----------------
+    private void startGameTimer() {
+        gameStartTime = System.nanoTime();
+        gameActive = true;
+        gameTime = 0;
+    }
+    private void stopGameTimer() {
+        if (gameActive) {
+            gameTime = (System.nanoTime() - gameStartTime) / 1_000_000_000.0;
+            gameActive = false;
+        }
+    }
+    private void cancelGameTimer() {
+        gameActive = false;
+        gameTime = 0;
+    }
+    public double getCurrentGameTime() {
+        if (gameActive) {
+            return (System.nanoTime() - gameStartTime) / 1_000_000_000.0;
+        }
+        return gameTime;
+    }
+
+    // ----------------- Click Speed Methods ----------------
+    private void startClickSpeedTimer() {
+        lastClickTime = System.nanoTime();
+        totalClickTime = 0;
+        clickCount = 0;
+        averageClickSpeed = 0;
+    }
+    private void recordClick() {
+        long now = System.nanoTime();
+        double clickTime = (now - lastClickTime) / 1_000_000.0;
+        totalClickTime += clickTime;
+        clickCount++;
+        averageClickSpeed = totalClickTime / clickCount;
+        lastClickTime = now;
+    }
+    private void resetClickTimer() {
+        lastClickTime = System.nanoTime();
+    }
+    public double getAverageClickSpeed() {
+        return averageClickSpeed;
+    }
+    // -------------------------------------------------
+
     private void lost(Button b) {
+        stopGameTimer();
         sfx.play("wrong", 0.5f);
         for (Button bu : bigBlueButtons) {
             ButtonHelper.flash(bu, ColorPalette.WRONG_BUTTON);
         }
+
+        Leaderboard.addEntry(name, level, gameMode, gameStartTime, gameTime, uiManager.getButtonCount(), averageClickSpeed);
+
+        Console.log("LOST after " + String.format("%.2f", gameTime) + "s | Avg Click Speed: " + String.format("%.0f", averageClickSpeed) + "ms");
         clear();
-        Console.log("LOST");
     }
     private void clear() {
+        if (gameActive) {
+            cancelGameTimer();
+        }
         mode = Mode.NONE;
         sequence.clear();
         level = 0;
@@ -153,9 +221,10 @@ public class LogicManager extends GameObject {
     }
     public void startButtonSequence() {
         clear();
+        startGameTimer();
+        startClickSpeedTimer();
         mode = Mode.SHOW;
     }
-
 
     //Event Handlers
     public void onClickBig(Button b) {
@@ -165,6 +234,7 @@ public class LogicManager extends GameObject {
         }
         Button expected = sequence.getContent();
         if (b == expected) {
+            recordClick(); // Klick-Geschwindigkeit messen
             ButtonHelper.flash(b);
             if (gameMode == GameMode.REVERSE) {
                 sequence.prev();
@@ -192,6 +262,10 @@ public class LogicManager extends GameObject {
         clear();
     }
     public void onStartButtonClick() {
+        if ((name == null || name.isEmpty() || name.isBlank())) {
+            sfx.play("blocked", 0.5f);
+            return;
+        }
         startButtonSequence();
     }
     public void onModeDropdownChanged(int index) {
@@ -201,7 +275,9 @@ public class LogicManager extends GameObject {
         updateGameModeSettings();
         Console.log("GAMEMODE: " + setGameMode);
     }
-
+    public void onNameUnfocus(String name) {
+        this.name = name.trim();
+    }
     @Override
     public void onWindowResized(int width, int height) {
         uiManager.setupBigButtons();
@@ -216,7 +292,6 @@ public class LogicManager extends GameObject {
         this.bigBlueButtons = bigBlueButtons;
         ButtonHelper.setBigBlueButtons(bigBlueButtons.toArrayList());
     }
-
 
     @Override
     public void onCollision(GameObject gameObject) {

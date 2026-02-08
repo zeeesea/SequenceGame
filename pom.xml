@@ -22,11 +22,20 @@
     </repositories>
 
     <dependencies>
+        <!-- Dependency for Game Engine -->
         <dependency>
             <groupId>com.github.zeeesea</groupId>
             <artifactId>GameEngine</artifactId>
             <version>v1.7.1</version>
         </dependency>
+
+        <!-- Dependency for JSON -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.16.1</version>
+        </dependency>
+
     </dependencies>
 
 </project>
