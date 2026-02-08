@@ -1,10 +1,14 @@
 package Helper;
 
-import GameEngine.Core.gameObject.Obj.Button;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 
+/**
+ * An iterable, generic, doubly linked list. It has a first, last, and current element.
+ * Therefore, you have access to all the elements the list contains.
+ *
+ * @param <T> the content type of the list
+ */
 public class List<T> implements Iterable<T> {
     //Variables
     private Node<T> first;
@@ -27,7 +31,24 @@ public class List<T> implements Iterable<T> {
         first = null;
         last = null;
         size = 0;
+        current = null;
     }
+    public List(List<T> list) {
+        first = null;
+        last = null;
+        size = 0;
+
+        for (T t : list) {
+            this.append(t);
+        }
+        current = null;
+    }
+
+    /**
+     * Appends an element to the list.
+     *
+     * @param value the element to append
+     */
     public void append(T value){
         Node<T> newNode = new Node<>(value);
 
@@ -40,6 +61,12 @@ public class List<T> implements Iterable<T> {
         last = newNode;
         size++;
     }
+
+    /**
+     * Inserts an element before the current position.
+     *
+     * @param value the element to insert
+     */
     public void insert(T value) {
         Node<T> newNode = new Node<>(value);
 
@@ -62,6 +89,12 @@ public class List<T> implements Iterable<T> {
         }
         size++;
     }
+
+    /**
+     * Concatenates another list onto this list.
+     *
+     * @param list the list to append
+     */
     public void concat(List<T> list) {
         if (list == null || list.first == null) return;
 
@@ -78,9 +111,17 @@ public class List<T> implements Iterable<T> {
     }
 
     //Helper Methods
+
+    /**
+     * @return whether the list is empty
+     */
     public boolean isEmpty() {
         return size == 0;
     }
+
+    /**
+     * Deletes the list.
+     */
     public void clear() {
         first = null;
         last = null;
@@ -90,9 +131,19 @@ public class List<T> implements Iterable<T> {
 
 
     //Current Methods
+
+    /**
+     * Returns true if the current pointer is not null.
+     */
     public boolean hasAccess() {
         return current != null;
     }
+
+    /**
+     * Removes the element the current pointer is pointing to.
+     *
+     * @return the removed element
+     */
     public T remove(){
         Node<T> temp = current;
         if(first == null || current == null) return null;
@@ -117,44 +168,86 @@ public class List<T> implements Iterable<T> {
         size--;
         return temp.data;
     }
+    /**
+     * Sets the current pointer to the first element in the list.
+     */
     public List<T> toFirst() {
         if (first == null || current == first) return this;
         current = first;
         return this;
     }
+    /**
+     * Sets the current pointer to the last element in the list.
+     */
     public List<T> toLast() {
         if (first == null || current == last) return this;
         current = last;
         return this;
     }
+    /**
+     * Sets the current pointer to the next element in the list.
+     */
     public List<T> next() {
         if (first == null || current == null) return this;
         current = current.next;
         return this;
     }
+    /**
+     * Sets the current pointer to the previous element in the list.
+     * This works because the list is doubly linked.
+     */
     public List<T> prev() {
         if (first == null || current == null) return this;
         current = current.prev;
         return this;
     }
+    /**
+     * Sets the content of the element the current pointer is pointing to.
+     */
     public void setContent(T value){
         if (first == null || current == null) return;
         current.data = value;
     }
+
+    /**
+     * @return the content of the current element
+     */
     public T getContent() {
         if(first == null || current == null) return null;
         return current.data;
     }
 
+    /**
+     * @return the size of the list
+     */
     public int size() {
         return size;
     }
 
+    /**
+     * @return whether current is the last element in the list
+     */
     public boolean isLast() {
         if (isEmpty()) return false;
         return current == last;
     }
+    /**
+     * @return whether current is the first element in the list
+     */
+    public boolean isFirst() {
+        if (isEmpty()) return false;
+        return current == first;
+    }
 
+    public List<T> clone() {
+        return new List<T>(this);
+    }
+
+    /**
+     * Converts the list into an ArrayList.
+     *
+     * @return the list as an ArrayList
+     */
     public ArrayList<T> toArrayList() {
         ArrayList<T> arrayList = new ArrayList<>();
         Node<T> temp = first;
@@ -165,6 +258,12 @@ public class List<T> implements Iterable<T> {
         return arrayList;
     }
 
+    /**
+     * Converts an ArrayList into a List.
+     *
+     * @param list the list to convert
+     * @return the converted list
+     */
     public static <T> List<T> fromArrayList(java.util.List<T> list){
         List<T> customList = new List<>();
         for (T obj : list){

@@ -33,7 +33,6 @@ public class UIManager extends GameObject {
     private Dropdown modeDropdown;
     private TextField nameInputField;
     private Button startButton;
-    private Button submitButton;
     private Text highscoresDescriptionText;
     private Text leaderBoardText;
     private Text debugModeText;
@@ -238,7 +237,7 @@ public class UIManager extends GameObject {
         objectManager.add(highscoresText);
 
         nameInputField = new TextField.Builder()
-                .rect(new Rectangle(scale(55, scaleX), scale(513, scaleY), scale(194, scaleX), scale(60, scaleY)))
+                .rect(new Rectangle(scale(55, scaleX), scale(513, scaleY), scale(300, scaleX), scale(60, scaleY)))
                 .font(new Font("Arial", Font.BOLD, scaleFont(30, fontScale)))
                 .textColor(ColorPalette.TEXT_MAIN)
                 .backgroundColor(ColorPalette.BORDER)
@@ -251,19 +250,6 @@ public class UIManager extends GameObject {
                 .placeholder("Name")
                 .build();
         objectManager.add(nameInputField);
-
-        submitButton = new Button.Builder()
-                .rect(new Rectangle(scale(270, scaleX), scale(513, scaleY), scale(194, scaleX), scale(60, scaleY)))
-                .color(ColorPalette.BUTTON_BLUE)
-                .border(ColorPalette.BORDER, 5)
-                .text("Submit")
-                .textColor(ColorPalette.TEXT_MAIN)
-                .font(new Font("Arial", Font.BOLD, scaleFont(40, fontScale)))
-                .tag("submitButton")
-                .cornerRadius(8)
-                .smoothHover(10.0f, 150.0f)
-                .build();
-        objectManager.add(submitButton);
 
         highscoresDescriptionText = new Text.Builder("Enter name and click button to submit Highscore")
                 .position(new Vector2(scale(45, scaleX), scale(621, scaleY)))
@@ -363,7 +349,6 @@ public class UIManager extends GameObject {
     }
 
     private void rebuildUI() {
-
         if (background1 != null) objectManager.remove(background1);
         if (background2 != null) objectManager.remove(background2);
         if (background3 != null) objectManager.remove(background3);
@@ -376,7 +361,6 @@ public class UIManager extends GameObject {
         if (startButton != null) objectManager.remove(startButton);
         if (highscoresText != null) objectManager.remove(highscoresText);
         if (nameInputField != null) objectManager.remove(nameInputField);
-        if (submitButton != null) objectManager.remove(submitButton);
         if (highscoresDescriptionText != null) objectManager.remove(highscoresDescriptionText);
         if (leaderBoardText != null) objectManager.remove(leaderBoardText);
         if (debugModeText != null) objectManager.remove(debugModeText);

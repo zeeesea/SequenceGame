@@ -1,6 +1,8 @@
 package Helper;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
@@ -19,6 +21,7 @@ public class Leaderboard {
 
     public static void init() {
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         File file = new File(leaderboardPath);
 
@@ -84,8 +87,12 @@ public class Leaderboard {
     }
 
 
+    public static List<PlayerEntry> getLeaderboard() {
+        return new List<>(leaderboard);
+    }
+
     // ---------------------- DATA CLASSES ----------------------
-    private static class PlayerEntry {
+    public static class PlayerEntry implements Comparable {
         public String name;
         public int totalClicks;
         public int mistakes;
@@ -101,6 +108,7 @@ public class Leaderboard {
         public void addGameEntry(int score, GameMode mode, long timeStamp, double playTime, int buttonCount, double averageClickSpeed) {
             games.add(new GameEntry(score, mode, timeStamp, playTime, buttonCount, averageClickSpeed));
         }
+        @JsonIgnore
         public GameEntry getHighScoreGame() {
             if (games == null || games.isEmpty()) return null;
             GameEntry highest = games.get(0);
@@ -109,9 +117,22 @@ public class Leaderboard {
             }
             return highest;
         }
+
+        @Override
+        public int compareTo(Comparable a) {
+            return Integer.compare(a.getComparableSize(), getComparableSize());
+        }
+
+        @JsonIgnore
+        @Override
+        public int getComparableSize() {
+            GameEntry highScore = getHighScoreGame();
+            if (highScore == null) return 0;
+            return highScore.score;
+        }
     }
 
-    private static class GameEntry {
+    public static class GameEntry {
         public int score;
         public GameMode gameMode;
         public long timestamp;

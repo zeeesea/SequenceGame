@@ -2,17 +2,19 @@ import GameEngine.Core.GameEngine;
 import GameEngine.Core.audio.SFXEngine;
 import GameEngine.Core.audio.SFXPlayer;
 import GameEngine.Core.gameObject.GameObject;
+import GameEngine.Core.gameObject.GameObjectManager;
 import GameEngine.Core.gameObject.Obj.Button;
+import GameEngine.Core.gameObject.Obj.Text;
 import GameEngine.Core.util.Console.Console;
 import GameEngine.Core.util.Timer.Timer;
-import Helper.ButtonHelper;
-import Helper.ColorPalette;
-import Helper.GameMode;
-import Helper.Leaderboard;
+import GameEngine.Core.util.Vector2;
+import Helper.*;
 import Helper.List;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
 
 public class LogicManager extends GameObject {
 
@@ -67,6 +69,7 @@ public class LogicManager extends GameObject {
         ButtonHelper.lightDuration = lightDuration;
         ButtonHelper.setBigBlueButtons(bigBlueButtons.toArrayList());
         Leaderboard.init();
+        LeaderBoardUI.init(objectManager);
 
         sfx.loadSFX("bum");
         sfx.loadSFX("blocked");
@@ -204,6 +207,7 @@ public class LogicManager extends GameObject {
         }
 
         Leaderboard.addEntry(name, level, gameMode, gameStartTime, gameTime, uiManager.getButtonCount(), averageClickSpeed);
+        LeaderBoardUI.refresh(objectManager);
 
         Console.log("LOST after " + String.format("%.2f", gameTime) + "s | Avg Click Speed: " + String.format("%.0f", averageClickSpeed) + "ms");
         clear();
@@ -291,6 +295,83 @@ public class LogicManager extends GameObject {
     public void setBigBlueButtons(List<Button> bigBlueButtons) {
         this.bigBlueButtons = bigBlueButtons;
         ButtonHelper.setBigBlueButtons(bigBlueButtons.toArrayList());
+    }
+
+    //Leaderboard
+    private static class LeaderBoardUI {
+        private static List<Text> entries = new List<>();
+        private static final int MAX_ENTRIES = 15;
+        private static final int MAX_NAME_LENGTH = 15;
+
+        private static final int PANEL_X = 529;
+        private static final int PANEL_Y = 150;
+        private static final int ENTRY_HEIGHT = 32;
+        private static final int PANEL_WIDTH = 200;
+
+        private LeaderBoardUI() {
+        }
+
+        private static void init(GameObjectManager objectManager) {
+            entries = new List<>();
+            refresh(objectManager);
+        }
+
+        private static void refresh(GameObjectManager objectManager) {
+            // Alte Einträge entfernen
+            for (Text text : entries) {
+                objectManager.remove(text);
+            }
+            entries.clear();
+
+            List<Leaderboard.PlayerEntry> leaderboard = Leaderboard.getLeaderboard();
+            List<Leaderboard.PlayerEntry> list = Sort.sort(leaderboard);
+
+            int y = PANEL_Y;
+            int count = 0;
+
+            for (Leaderboard.PlayerEntry entry : list) {
+                if (count >= MAX_ENTRIES) break;
+
+                String displayName = shortenName(entry.name);
+                int highScore = getHighScore(entry);
+                String gameMode = getGameMode(entry) != null ? "(" + getGameMode(entry) + ")" : "";
+                String displayText = gameMode + " " + displayName + " - " + highScore;
+
+
+                Text text = new Text.Builder(displayText)
+                        .position(new Vector2(PANEL_X, y))
+                        .color(ColorPalette.TEXT_MAIN)
+                        .font(new Font("Arial", Font.BOLD, 18))
+                        .build();
+
+                entries.append(text);
+                objectManager.add(text);
+
+                y += ENTRY_HEIGHT;
+                count++;
+            }
+        }
+
+        private static String shortenName(String name) {
+            if (name == null) return "???";
+            if (name.length() <= MAX_NAME_LENGTH) {
+                return name;
+            }
+            return name.substring(0, MAX_NAME_LENGTH - 2) + "..";
+        }
+
+        private static int getHighScore(Leaderboard.PlayerEntry entry) {
+            if (entry.getHighScoreGame() == null) return 0;
+            return entry.getHighScoreGame().score;
+        }
+
+        private static String getGameMode(Leaderboard.PlayerEntry entry) {
+            if (entry.getHighScoreGame() == null) return null;
+            String s = "";
+            s += entry.getHighScoreGame().gameMode.getShort();
+            s += entry.getHighScoreGame().buttonCount;
+            return s;
+        }
     }
 
     @Override
