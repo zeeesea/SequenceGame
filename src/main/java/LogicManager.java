@@ -69,7 +69,7 @@ public class LogicManager extends GameObject {
         ButtonHelper.lightDuration = lightDuration;
         ButtonHelper.setBigBlueButtons(bigBlueButtons.toArrayList());
         Leaderboard.init();
-        LeaderBoardUI.init(objectManager);
+        LeaderBoardUI.init(objectManager, getScreenWidth(), getScreenHeight());
 
         sfx.loadSFX("bum");
         sfx.loadSFX("blocked");
@@ -207,7 +207,7 @@ public class LogicManager extends GameObject {
         }
 
         Leaderboard.addEntry(name, level, gameMode, gameStartTime, gameTime, uiManager.getButtonCount(), averageClickSpeed);
-        LeaderBoardUI.refresh(objectManager);
+        LeaderBoardUI.refresh(objectManager, getScreenWidth(), getScreenHeight());
 
         Console.log("LOST after " + String.format("%.2f", gameTime) + "s | Avg Click Speed: " + String.format("%.0f", averageClickSpeed) + "ms");
         clear();
@@ -285,6 +285,7 @@ public class LogicManager extends GameObject {
     @Override
     public void onWindowResized(int width, int height) {
         uiManager.setupBigButtons();
+        LeaderBoardUI.refresh(objectManager, getScreenWidth(), getScreenHeight());
         clear();
     }
 
@@ -303,30 +304,47 @@ public class LogicManager extends GameObject {
         private static final int MAX_ENTRIES = 15;
         private static final int MAX_NAME_LENGTH = 15;
 
-        private static final int PANEL_X = 529;
-        private static final int PANEL_Y = 150;
-        private static final int ENTRY_HEIGHT = 32;
-        private static final int PANEL_WIDTH = 200;
+        // Base values
+        private static final int BASE_PANEL_X = 529;
+        private static final int BASE_PANEL_Y = 150;
+        private static final int BASE_ENTRY_HEIGHT = 32;
+        private static final int BASE_FONT_SIZE = 18;
+
+        // Reference resolution
+        private static int BASE_WIDTH = 0;
+        private static int BASE_HEIGHT = 0;
 
         private LeaderBoardUI() {
         }
 
-        private static void init(GameObjectManager objectManager) {
+        private static void init(GameObjectManager objectManager, int screenWidth, int screenHeight) {
+            if (BASE_WIDTH == 0) {
+                BASE_WIDTH = screenWidth;
+                BASE_HEIGHT = screenHeight;
+            }
             entries = new List<>();
-            refresh(objectManager);
+            refresh(objectManager, screenWidth, screenHeight);
         }
 
-        private static void refresh(GameObjectManager objectManager) {
-            // Alte Einträge entfernen
+        private static void refresh(GameObjectManager objectManager, int screenWidth, int screenHeight) {
             for (Text text : entries) {
                 objectManager.remove(text);
             }
             entries.clear();
 
+            float scaleX = (float) screenWidth / BASE_WIDTH;
+            float scaleY = (float) screenHeight / BASE_HEIGHT;
+            float fontScale = Math.min(scaleX, scaleY);
+
+            int panelX = scale(BASE_PANEL_X, scaleX);
+            int panelY = scale(BASE_PANEL_Y, scaleY);
+            int entryHeight = scale(BASE_ENTRY_HEIGHT, fontScale);
+            int fontSize = scaleFont(BASE_FONT_SIZE, fontScale);
+
             List<Leaderboard.PlayerEntry> leaderboard = Leaderboard.getLeaderboard();
             List<Leaderboard.PlayerEntry> list = Sort.sort(leaderboard);
 
-            int y = PANEL_Y;
+            int y = panelY;
             int count = 0;
 
             for (Leaderboard.PlayerEntry entry : list) {
@@ -339,17 +357,25 @@ public class LogicManager extends GameObject {
 
 
                 Text text = new Text.Builder(displayText)
-                        .position(new Vector2(PANEL_X, y))
+                        .position(new Vector2(panelX, y))
                         .color(ColorPalette.TEXT_MAIN)
-                        .font(new Font("Arial", Font.BOLD, 18))
+                        .font(new Font("Arial", Font.BOLD, fontSize))
                         .build();
 
                 entries.append(text);
                 objectManager.add(text);
 
-                y += ENTRY_HEIGHT;
+                y += entryHeight;
                 count++;
             }
+        }
+
+        private static int scale(int value, float scaleFactor) {
+            return (int) (value * scaleFactor);
+        }
+
+        private static int scaleFont(int baseSize, float scaleFactor) {
+            return Math.max(8, (int) (baseSize * scaleFactor));
         }
 
         private static String shortenName(String name) {

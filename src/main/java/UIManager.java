@@ -20,30 +20,21 @@ public class UIManager extends GameObject {
     private int buttonCount = 3;
     private final int buttonMargin = 25;
 
-    // Basis-Größen (bei 1536x864 Auflösung)
-    private final int BASE_WIDTH = 1536;
-    private final int BASE_HEIGHT = 864;
+    // Base Res
+    private final int BASE_WIDTH = getScreenWidth();
+    private final int BASE_HEIGHT = getScreenHeight();
 
     //Settings UI - LEFT
-    private UIRect background1;
-    private UIRect background2;
-    private UIRect background3;
-    private UIRect background4;
+    private UIRect background1, background2, background3, background4;
+    private Text highscoresDescriptionText, leaderBoardText, debugModeText, titleText, levelText, highscoresText;
     private CheckBox debugModeCheckbox;
     private Dropdown modeDropdown;
     private TextField nameInputField;
     private Button startButton;
-    private Text highscoresDescriptionText;
-    private Text leaderBoardText;
-    private Text debugModeText;
-    private Text titleText;
-    private Text levelText;
-    private Text highscoresText;
 
     @Override
     public void init() {
         logicManager = objectManager.get(LogicManager.class);
-
         setupBigButtons();
         setupLeftUI();
     }
@@ -273,7 +264,6 @@ public class UIManager extends GameObject {
         objectManager.add(debugModeText);
     }
 
-    // Hilfsmethoden für Skalierung
     private int scale(int value, float scaleFactor) {
         return (int) (value * scaleFactor);
     }
