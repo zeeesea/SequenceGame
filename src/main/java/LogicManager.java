@@ -56,6 +56,7 @@ public class LogicManager extends GameObject {
     // Debug Mode
     private boolean debugActive = false;
     private boolean debugWasActiveThisGame = false;
+    private String debugString = "";
 
 
     // ----------------- Modes -------------------------
@@ -164,51 +165,7 @@ public class LogicManager extends GameObject {
         uiManager.getLevelText().setText("Level " + lvl);
     }
 
-    // ----------------- Timer Methods ----------------
-    private void startGameTimer() {
-        gameStartTime = System.nanoTime();
-        gameActive = true;
-        gameTime = 0;
-    }
-    private void stopGameTimer() {
-        if (gameActive) {
-            gameTime = (System.nanoTime() - gameStartTime) / 1_000_000_000.0;
-            gameActive = false;
-        }
-    }
-    private void cancelGameTimer() {
-        gameActive = false;
-        gameTime = 0;
-    }
-    public double getCurrentGameTime() {
-        if (gameActive) {
-            return (System.nanoTime() - gameStartTime) / 1_000_000_000.0;
-        }
-        return gameTime;
-    }
 
-    // ----------------- Click Speed Methods ----------------
-    private void startClickSpeedTimer() {
-        lastClickTime = System.nanoTime();
-        totalClickTime = 0;
-        clickCount = 0;
-        averageClickSpeed = 0;
-    }
-    private void recordClick() {
-        long now = System.nanoTime();
-        double clickTime = (now - lastClickTime) / 1_000_000.0;
-        totalClickTime += clickTime;
-        clickCount++;
-        averageClickSpeed = totalClickTime / clickCount;
-        lastClickTime = now;
-    }
-    private void resetClickTimer() {
-        lastClickTime = System.nanoTime();
-    }
-    public double getAverageClickSpeed() {
-        return averageClickSpeed;
-    }
-    // -------------------------------------------------
 
     private void lost(Button b) {
         stopGameTimer();
@@ -241,7 +198,10 @@ public class LogicManager extends GameObject {
         mode = Mode.SHOW;
     }
 
-    //Event Handlers
+    public void updateDebugMode() {
+    }
+
+    // --------------------- Event Handlers ---------------------
     public void onClickBig(Button b) {
         if (mode != Mode.CLICK || sequence.isEmpty() || !sequence.hasAccess()) {
             sfx.play("blocked", 0.5f);
@@ -307,7 +267,7 @@ public class LogicManager extends GameObject {
         }
     }
 
-    //Getter/Setter
+    // ---------------------- Getter/Setter ------------------------
     public void setUiManager(UIManager uiManager) {
         this.uiManager = uiManager;
     }
@@ -316,7 +276,7 @@ public class LogicManager extends GameObject {
         ButtonHelper.setBigBlueButtons(bigBlueButtons.toArrayList());
     }
 
-    //Leaderboard
+    // ---------------------- Leaderboard ---------------------
     private static class LeaderBoardUI {
         private static List<Text> entries = new List<>();
         private static final int MAX_ENTRIES = 15;
@@ -417,6 +377,51 @@ public class LogicManager extends GameObject {
             return s;
         }
     }
+
+    // ----------------- Timer Methods ----------------
+    private void startGameTimer() {
+        gameStartTime = System.nanoTime();
+        gameActive = true;
+        gameTime = 0;
+    }
+    private void stopGameTimer() {
+        if (gameActive) {
+            gameTime = (System.nanoTime() - gameStartTime) / 1_000_000_000.0;
+            gameActive = false;
+        }
+    }
+    private void cancelGameTimer() {
+        gameActive = false;
+        gameTime = 0;
+    }
+    public double getCurrentGameTime() {
+        if (gameActive) {
+            return (System.nanoTime() - gameStartTime) / 1_000_000_000.0;
+        }
+        return gameTime;
+    }
+
+    private void startClickSpeedTimer() {
+        lastClickTime = System.nanoTime();
+        totalClickTime = 0;
+        clickCount = 0;
+        averageClickSpeed = 0;
+    }
+    private void recordClick() {
+        long now = System.nanoTime();
+        double clickTime = (now - lastClickTime) / 1_000_000.0;
+        totalClickTime += clickTime;
+        clickCount++;
+        averageClickSpeed = totalClickTime / clickCount;
+        lastClickTime = now;
+    }
+    private void resetClickTimer() {
+        lastClickTime = System.nanoTime();
+    }
+    public double getAverageClickSpeed() {
+        return averageClickSpeed;
+    }
+    // -------------------------------------------------
 
     @Override
     public void onCollision(GameObject gameObject) {
