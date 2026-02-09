@@ -53,6 +53,10 @@ public class LogicManager extends GameObject {
     private float levelDelay = defaultLevelDelay;
     Timer timer;
 
+    // Debug Mode
+    private boolean debugActive = false;
+    private boolean debugWasActiveThisGame = false;
+
 
     // ----------------- Modes -------------------------
     public enum Mode {NONE,CLICK,SHOW}
@@ -84,24 +88,11 @@ public class LogicManager extends GameObject {
 
         if (mode == Mode.SHOW) {
             if (lastMode != Mode.SHOW) {
-                //Switched to SHOW mode
-                updateGameModeSettings();
-                level++;
-                updateLevel(level);
-                Console.log("SHOW MODE - LEVEL " + (level));
-                sequence.toFirst();
-                timer = Timer.create(this::showNextInSequence, flashDelay).start();
+                switchToSHOW();
             }
         } else if (mode == Mode.CLICK) {
             if (lastMode != Mode.CLICK) {
-                //Switched to CLICK mode
-                Console.log("CLICK MODE - LEVEL " + (level));
-                resetClickTimer(); // Timer für Reaktionszeit starten
-                if (gameMode == GameMode.REVERSE) {
-                    sequence.toLast();
-                } else {
-                    sequence.toFirst();
-                }
+                switchToCLICK();
             }
         } else {
             if (lastMode != Mode.NONE) {
@@ -110,6 +101,26 @@ public class LogicManager extends GameObject {
             }
         }
         lastMode = mode;
+    }
+
+    private void switchToSHOW() {
+        updateGameModeSettings();
+        debugWasActiveThisGame = debugActive;
+        level++;
+        updateLevel(level);
+        Console.log("SHOW MODE - LEVEL " + (level));
+        sequence.toFirst();
+        timer = Timer.create(this::showNextInSequence, flashDelay).start();
+    }
+    private void switchToCLICK() {
+        //Switched to CLICK mode
+        Console.log("CLICK MODE - LEVEL " + (level));
+        resetClickTimer(); // Timer für Reaktionszeit starten
+        if (gameMode == GameMode.REVERSE) {
+            sequence.toLast();
+        } else {
+            sequence.toFirst();
+        }
     }
 
     private void updateGameModeSettings() {
@@ -287,6 +298,13 @@ public class LogicManager extends GameObject {
         uiManager.setupBigButtons();
         LeaderBoardUI.refresh(objectManager, getScreenWidth(), getScreenHeight());
         clear();
+    }
+    public void onDebugModeChange(boolean checked) {
+        this.debugActive = checked;
+        Console.log("DEBUG MODE: " + debugActive);
+        if (checked) {
+            debugWasActiveThisGame = true;
+        }
     }
 
     //Getter/Setter

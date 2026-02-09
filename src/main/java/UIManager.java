@@ -200,6 +200,7 @@ public class UIManager extends GameObject {
                 .boxSize(scale(25, fontScale))
                 .boxColor(ColorPalette.BUTTON_LIGHT)
                 .hoverBorderColor(ColorPalette.BORDER)
+                .onChanged(this::onDebugModeChange)
                 .checkedColor(ColorPalette.BORDER)
                 .labelColor(ColorPalette.TEXT_MAIN)
                 .labelFont(new Font("Arial", Font.BOLD, scaleFont(14, fontScale)))
@@ -296,6 +297,11 @@ public class UIManager extends GameObject {
     private void onNameUnfocus() {
         if (logicManager != null) {
             logicManager.onNameUnfocus(nameInputField.getText());
+        }
+    }
+    private void onDebugModeChange(boolean checked) {
+        if (logicManager != null) {
+            logicManager.onDebugModeChange(checked);
         }
     }
     //Getter/Setter
