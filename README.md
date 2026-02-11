@@ -12,4 +12,6 @@
 
 <img width="1538" height="896" alt="image" src="https://github.com/user-attachments/assets/27f399dc-5bce-4330-a0d8-016f41e36f0c" />
 
+<img width="1538" height="896" alt="image" src="https://github.com/user-attachments/assets/5b1b9a81-1720-4d2b-b51e-7559d57faadf" />
+
 <p>Fully working UI</p>
