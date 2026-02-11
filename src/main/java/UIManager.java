@@ -9,12 +9,12 @@ import Helper.List;
 import java.awt.*;
 
 public class UIManager extends GameObject {
+
+    //<editor-fold desc="VARIABLES">
+
     //References
     private LogicManager logicManager;
-
-    //UI Elements
     private List<Button> bigBlueButtons = new List<Button>();
-    private Slider buttonCountSlider;
 
     //Button Grid - RIGHT
     private int buttonCount = 3;
@@ -26,11 +26,16 @@ public class UIManager extends GameObject {
 
     //Settings UI - LEFT
     private UIRect background1, background2, background3, background4;
-    private Text highscoresDescriptionText, leaderBoardText, debugModeText, titleText, levelText, highscoresText;
+    private Text highscoresDescriptionText, leaderBoardText, debugModeText, titleText, levelText, highscoresText, volumeText;
+    private Slider buttonCountSlider, volumeSlider;
     private CheckBox debugModeCheckbox;
     private Dropdown modeDropdown;
     private TextField nameInputField;
     private Button startButton;
+
+    //</editor-fold>
+
+    //<editor-fold desc="GAME LOOP">
 
     @Override
     public void init() {
@@ -39,6 +44,9 @@ public class UIManager extends GameObject {
         setupLeftUI();
     }
 
+    //</editor-fold>
+
+    //<editor-fold desc="SETUP">
     public void setupBigButtons() {
         int buttonSize;
         Vector2 gridOffset;
@@ -180,7 +188,7 @@ public class UIManager extends GameObject {
         objectManager.add(modeDropdown);
 
         buttonCountSlider = new Slider.Builder()
-                .pos(new Vector2(scale(50, scaleX), scale(153, scaleY)))
+                .pos(new Vector2(scale(50, scaleX), scale(160, scaleY)))
                 .size(scale(424, scaleX), scale(21, scaleY))
                 .cornerRadius(10)
                 .startValue(buttonCount)
@@ -238,7 +246,6 @@ public class UIManager extends GameObject {
                 .focusedBorderColor(ColorPalette.BORDER)
                 .textColor(ColorPalette.TEXT_MAIN)
                 .cornerRadius(8)
-                .onUnfocus(this::onNameUnfocus)
                 .placeholder("Name")
                 .build();
         objectManager.add(nameInputField);
@@ -263,17 +270,41 @@ public class UIManager extends GameObject {
                 .font(new Font("Arial", Font.BOLD, scaleFont(16, fontScale)))
                 .build();
         objectManager.add(debugModeText);
+
+        volumeSlider = new Slider.Builder()
+                .pos(new Vector2(scale(1200, scaleX), scale(820, scaleY)))
+                .size(scale(300, scaleX), scale(17, scaleY))
+                .cornerRadius(10)
+                .startValue(buttonCount)
+                .borderColor(ColorPalette.BORDER)
+                .handleShape(Slider.HandleShape.CIRCLE)
+                .fillColor(ColorPalette.BORDER)
+                .backgroundColor(ColorPalette.BUTTON_LIGHT)
+                .handleColor(ColorPalette.BUTTON_BLUE)
+                .range(0, 1)
+                .startValue(0.8f)
+                .onDragEndValue(this::onVolumeChange)
+                .build();
+        objectManager.add(volumeSlider);
+
+        volumeText = new Text.Builder("Volume")
+                .position(new Vector2(scale(1200, scaleX), scale(812, scaleY)))
+                .color(ColorPalette.TEXT_MAIN)
+                .font(new Font("Arial", Font.BOLD, scaleFont(20, fontScale)))
+                .build();
+        objectManager.add(volumeText);
     }
 
     private int scale(int value, float scaleFactor) {
         return (int) (value * scaleFactor);
     }
-
     private int scaleFont(int baseSize, float scaleFactor) {
         return Math.max(8, (int) (baseSize * scaleFactor));
     }
+    //</editor-fold>
 
-    //Events
+    //<editor-fold desc="EVENTS">
+
     private void onCountSliderValueChange(float v) {
         if (logicManager != null) {
             logicManager.onCountSliderValueChange(v);
@@ -294,17 +325,20 @@ public class UIManager extends GameObject {
             logicManager.onModeDropdownChanged(index);
         }
     }
-    private void onNameUnfocus() {
-        if (logicManager != null) {
-            logicManager.onNameUnfocus(nameInputField.getText());
-        }
-    }
     private void onDebugModeChange(boolean checked) {
         if (logicManager != null) {
             logicManager.onDebugModeChange(checked);
         }
     }
-    //Getter/Setter
+    private void onVolumeChange(float v) {
+        if (logicManager != null) {
+            logicManager.onVolumeChange(v);
+        }
+    }
+    //</editor-fold>
+
+    //<editor-fold desc="GETTER/SETTER">
+
     public List<Button> getBigBlueButtons() {
         return bigBlueButtons;
     }
@@ -333,11 +367,12 @@ public class UIManager extends GameObject {
     public Text getHighscoresDescriptionText() {
         return highscoresDescriptionText;
     }
-
-
-    @Override
-    public void update(double v) {
+    public TextField getNameInputField() {
+        return nameInputField;
     }
+    //</editor-fold>
+
+    //<editor-fold desc="WINDOW RESIZE">
 
     @Override
     public void onWindowResized(int width, int height) {
@@ -360,6 +395,8 @@ public class UIManager extends GameObject {
         if (highscoresDescriptionText != null) objectManager.remove(highscoresDescriptionText);
         if (leaderBoardText != null) objectManager.remove(leaderBoardText);
         if (debugModeText != null) objectManager.remove(debugModeText);
+        if (volumeSlider != null) objectManager.remove(volumeSlider);
+        if (volumeText != null) objectManager.remove(volumeText);
 
         setupBigButtons();
         setupLeftUI();
@@ -368,10 +405,21 @@ public class UIManager extends GameObject {
             logicManager.setBigBlueButtons(bigBlueButtons);
         }
     }
+    //</editor-fold>
+
+    //<editor-fold desc="USELESS">
+
+    @Override
+    public void update(double v) {
+    }
+
+
     @Override
     public void draw(Graphics2D graphics2D) {
     }
     @Override
     public void onCollision(GameObject gameObject) {
     }
+
+    //</editor-fold>
 }

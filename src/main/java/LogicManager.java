@@ -1,9 +1,8 @@
-import GameEngine.Core.GameEngine;
-import GameEngine.Core.audio.SFXEngine;
 import GameEngine.Core.audio.SFXPlayer;
 import GameEngine.Core.gameObject.GameObject;
 import GameEngine.Core.gameObject.GameObjectManager;
 import GameEngine.Core.gameObject.Obj.Button;
+import GameEngine.Core.gameObject.Obj.StyledString;
 import GameEngine.Core.gameObject.Obj.Text;
 import GameEngine.Core.util.Console.Console;
 import GameEngine.Core.util.Timer.Timer;
@@ -13,10 +12,11 @@ import Helper.List;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.LinkedList;
+
 
 public class LogicManager extends GameObject {
+
+    //<editor-fold desc="VARIABLES">
 
     // ----------------- References --------------------
     private UIManager uiManager;
@@ -43,20 +43,22 @@ public class LogicManager extends GameObject {
     private final float defaultFlashDelay = 0.45f;
     private final float defaultLevelDelay = 0.6f;
     // Values  -- Speed Mode --
-    private final float speedLightDuration = 0.16f;
-    private final float speedFlashDelay = 0.24f;
-    private final float speedLevelDelay = 0.4f;
+    private final float speedLightDuration = 0.13f;
+    private final float speedFlashDelay = 0.20f;
+    private final float speedLevelDelay = 0.3f;
 
     private int level = 0;
     private float lightDuration = defaultLightDuration;
     private float flashDelay = defaultFlashDelay;
     private float levelDelay = defaultLevelDelay;
+    private int sequenceIndex = 0; // Aktuelle Position in der Sequenz
     Timer timer;
 
     // Debug Mode
     private boolean debugActive = false;
     private boolean debugWasActiveThisGame = false;
-    private String debugString = "";
+    private Color debugShowColor = Color.RED;
+    private Color debugClickColor = Color.GREEN;
 
 
     // ----------------- Modes -------------------------
@@ -65,6 +67,10 @@ public class LogicManager extends GameObject {
     private Mode lastMode = Mode.NONE;
     private GameMode setGameMode = GameMode.NORMAL;
     private GameMode gameMode = GameMode.NORMAL;
+
+    //</editor-fold>
+
+    //<editor-fold desc="GAME LOOP">
 
     @Override
     public void init() {
@@ -75,17 +81,20 @@ public class LogicManager extends GameObject {
         ButtonHelper.setBigBlueButtons(bigBlueButtons.toArrayList());
         Leaderboard.init();
         LeaderBoardUI.init(objectManager, getScreenWidth(), getScreenHeight());
+        updateDebugMode();
 
         sfx.loadSFX("bum");
         sfx.loadSFX("blocked");
         sfx.loadSFX("wrong");
         sfx.loadSFX("levelup");
         objectManager.add(sfx);
+        sfx.setGlobalVolume(0.8f);
     }
 
     @Override
     public void update(double deltaTime) {
         ButtonHelper.update(deltaTime);
+
 
         if (mode == Mode.SHOW) {
             if (lastMode != Mode.SHOW) {
@@ -108,9 +117,11 @@ public class LogicManager extends GameObject {
         updateGameModeSettings();
         debugWasActiveThisGame = debugActive;
         level++;
+        name = uiManager.getNameInputField().getText().trim();
         updateLevel(level);
         Console.log("SHOW MODE - LEVEL " + (level));
         sequence.toFirst();
+        sequenceIndex = 0;
         timer = Timer.create(this::showNextInSequence, flashDelay).start();
     }
     private void switchToCLICK() {
@@ -119,10 +130,16 @@ public class LogicManager extends GameObject {
         resetClickTimer(); // Timer für Reaktionszeit starten
         if (gameMode == GameMode.REVERSE) {
             sequence.toLast();
+            sequenceIndex = sequence.size() - 1;
         } else {
             sequence.toFirst();
+            sequenceIndex = 0;
         }
+        updateDebugMode();
     }
+    //</editor-fold>
+
+    //<editor-fold desc="UPDATE METHODS">
 
     private void updateGameModeSettings() {
         gameMode = setGameMode;
@@ -148,14 +165,19 @@ public class LogicManager extends GameObject {
             return;
         }
         Button b = sequence.getContent();
+        updateDebugMode();
         ButtonHelper.flash(b);
         sequence.next();
+        sequenceIndex++;
     }
     private void addToSequence() {
         if (sequence == null) return;
         Button random = ButtonHelper.getRandomButton();
         if (random != null) {
             sequence.append(random);
+            sequence.toLast();
+            sequenceIndex = sequence.size() - 1;
+            updateDebugMode();
             ButtonHelper.flash(random);
             timer.stop();
             mode = Mode.CLICK;
@@ -165,18 +187,17 @@ public class LogicManager extends GameObject {
         uiManager.getLevelText().setText("Level " + lvl);
     }
 
-
-
     private void lost(Button b) {
         stopGameTimer();
         sfx.play("wrong", 0.5f);
         for (Button bu : bigBlueButtons) {
             ButtonHelper.flash(bu, ColorPalette.WRONG_BUTTON);
         }
-
-        Leaderboard.addEntry(name, level, gameMode, gameStartTime, gameTime, uiManager.getButtonCount(), averageClickSpeed);
-        LeaderBoardUI.refresh(objectManager, getScreenWidth(), getScreenHeight());
-
+        //Check if name registered (at Game Start), if not -> No Leaderboard
+        if (!(name == null || name.isEmpty() || name.isBlank()) && !debugWasActiveThisGame) {
+            Leaderboard.addEntry(name, level, gameMode, gameStartTime, gameTime, uiManager.getButtonCount(), averageClickSpeed);
+            LeaderBoardUI.refresh(objectManager, getScreenWidth(), getScreenHeight());
+        }
         Console.log("LOST after " + String.format("%.2f", gameTime) + "s | Avg Click Speed: " + String.format("%.0f", averageClickSpeed) + "ms");
         clear();
     }
@@ -198,10 +219,65 @@ public class LogicManager extends GameObject {
         mode = Mode.SHOW;
     }
 
-    public void updateDebugMode() {
+    //</editor-fold>
+
+    //<editor-fold desc="DEBUG MODE">
+
+    private void updateDebugMode() {
+        StyledString debugString = new StyledString("Enable debug mode for this feature", ColorPalette.TEXT_MAIN);
+        // Change Color of current element
+        setButtonText(debugActive);
+        if (debugActive) {
+            if (mode == Mode.SHOW) {
+                // Current flashing button red
+                debugString = getDebugString(debugShowColor);
+            } else if (mode == Mode.CLICK) {
+                // Expected button green
+                debugString = getDebugString(debugClickColor);
+            } else {
+                debugString.clear();
+            }
+        }
+        uiManager.getDebugModeText().setText(debugString);
+    }
+    private StyledString getDebugString(Color color) {
+        StyledString s = new StyledString();
+
+        boolean first = true;
+        int index = 0;
+        List<Button> sequenceClone = sequence.clone();
+        for (Button b : sequenceClone) {
+            if (!first) {
+                s.append(" - ");
+            } else first = false;
+            String tag = b.tag;
+            if (index == sequenceIndex) {
+                s.append(tag, color);
+            } else {
+                s.append(tag);
+            }
+            index++;
+        }
+        return s;
+    }
+    private void setButtonText(boolean buh) {
+        if (buh) {
+            // Show Tag on buttons
+            for (Button b : bigBlueButtons) {
+                b.setText(b.tag);
+            }
+        } else {
+            // Hide Text on buttons
+            for (Button b : bigBlueButtons) {
+                b.setText("");
+            }
+        }
     }
 
-    // --------------------- Event Handlers ---------------------
+    //</editor-fold>
+
+    //<editor-fold desc="EVENT HANDLERS">
+
     public void onClickBig(Button b) {
         if (mode != Mode.CLICK || sequence.isEmpty() || !sequence.hasAccess()) {
             sfx.play("blocked", 0.5f);
@@ -209,13 +285,16 @@ public class LogicManager extends GameObject {
         }
         Button expected = sequence.getContent();
         if (b == expected) {
-            recordClick(); // Klick-Geschwindigkeit messen
+            recordClick();
             ButtonHelper.flash(b);
             if (gameMode == GameMode.REVERSE) {
                 sequence.prev();
+                sequenceIndex--;
             } else {
                 sequence.next();
+                sequenceIndex++;
             }
+            updateDebugMode();
             //Check if sequence is finished
             if (!sequence.hasAccess()) {
                 mode = Mode.NONE;
@@ -234,13 +313,10 @@ public class LogicManager extends GameObject {
         if ((int)newButtonCount == uiManager.getButtonCount()) return;
         uiManager.setButtonCount((int)newButtonCount);
         uiManager.setupBigButtons();
+        updateDebugMode();
         clear();
     }
     public void onStartButtonClick() {
-        if ((name == null || name.isEmpty() || name.isBlank())) {
-            sfx.play("blocked", 0.5f);
-            return;
-        }
         startButtonSequence();
     }
     public void onModeDropdownChanged(int index) {
@@ -250,9 +326,6 @@ public class LogicManager extends GameObject {
         updateGameModeSettings();
         Console.log("GAMEMODE: " + setGameMode);
     }
-    public void onNameUnfocus(String name) {
-        this.name = name.trim();
-    }
     @Override
     public void onWindowResized(int width, int height) {
         uiManager.setupBigButtons();
@@ -261,13 +334,21 @@ public class LogicManager extends GameObject {
     }
     public void onDebugModeChange(boolean checked) {
         this.debugActive = checked;
+        updateDebugMode();
         Console.log("DEBUG MODE: " + debugActive);
         if (checked) {
             debugWasActiveThisGame = true;
         }
     }
+    public void onVolumeChange(float volume) {
+        Console.log("VOLUME: " + volume);
+        sfx.setGlobalVolume(volume);
+    }
 
-    // ---------------------- Getter/Setter ------------------------
+    //</editor-fold>
+
+    //<editor-fold desc="GETTER/SETTER">
+
     public void setUiManager(UIManager uiManager) {
         this.uiManager = uiManager;
     }
@@ -276,7 +357,57 @@ public class LogicManager extends GameObject {
         ButtonHelper.setBigBlueButtons(bigBlueButtons.toArrayList());
     }
 
-    // ---------------------- Leaderboard ---------------------
+    //</editor-fold>
+
+    //<editor-fold desc="TIMER METHODS">
+
+    private void startGameTimer() {
+        gameStartTime = System.nanoTime();
+        gameActive = true;
+        gameTime = 0;
+    }
+    private void stopGameTimer() {
+        if (gameActive) {
+            gameTime = (System.nanoTime() - gameStartTime) / 1_000_000_000.0;
+            gameActive = false;
+        }
+    }
+    private void cancelGameTimer() {
+        gameActive = false;
+        gameTime = 0;
+    }
+    public double getCurrentGameTime() {
+        if (gameActive) {
+            return (System.nanoTime() - gameStartTime) / 1_000_000_000.0;
+        }
+        return gameTime;
+    }
+
+    private void startClickSpeedTimer() {
+        lastClickTime = System.nanoTime();
+        totalClickTime = 0;
+        clickCount = 0;
+        averageClickSpeed = 0;
+    }
+    private void recordClick() {
+        long now = System.nanoTime();
+        double clickTime = (now - lastClickTime) / 1_000_000.0;
+        totalClickTime += clickTime;
+        clickCount++;
+        averageClickSpeed = totalClickTime / clickCount;
+        lastClickTime = now;
+    }
+    private void resetClickTimer() {
+        lastClickTime = System.nanoTime();
+    }
+    public double getAverageClickSpeed() {
+        return averageClickSpeed;
+    }
+
+    //</editor-fold>
+
+    //<editor-fold desc="LEADERBOARD UI">
+
     private static class LeaderBoardUI {
         private static List<Text> entries = new List<>();
         private static final int MAX_ENTRIES = 15;
@@ -378,50 +509,9 @@ public class LogicManager extends GameObject {
         }
     }
 
-    // ----------------- Timer Methods ----------------
-    private void startGameTimer() {
-        gameStartTime = System.nanoTime();
-        gameActive = true;
-        gameTime = 0;
-    }
-    private void stopGameTimer() {
-        if (gameActive) {
-            gameTime = (System.nanoTime() - gameStartTime) / 1_000_000_000.0;
-            gameActive = false;
-        }
-    }
-    private void cancelGameTimer() {
-        gameActive = false;
-        gameTime = 0;
-    }
-    public double getCurrentGameTime() {
-        if (gameActive) {
-            return (System.nanoTime() - gameStartTime) / 1_000_000_000.0;
-        }
-        return gameTime;
-    }
+    //</editor-fold>
 
-    private void startClickSpeedTimer() {
-        lastClickTime = System.nanoTime();
-        totalClickTime = 0;
-        clickCount = 0;
-        averageClickSpeed = 0;
-    }
-    private void recordClick() {
-        long now = System.nanoTime();
-        double clickTime = (now - lastClickTime) / 1_000_000.0;
-        totalClickTime += clickTime;
-        clickCount++;
-        averageClickSpeed = totalClickTime / clickCount;
-        lastClickTime = now;
-    }
-    private void resetClickTimer() {
-        lastClickTime = System.nanoTime();
-    }
-    public double getAverageClickSpeed() {
-        return averageClickSpeed;
-    }
-    // -------------------------------------------------
+    //<editor-fold desc="USELESS">
 
     @Override
     public void onCollision(GameObject gameObject) {
@@ -430,4 +520,6 @@ public class LogicManager extends GameObject {
     public void draw(Graphics2D graphics2D) {
 
     }
+
+    //</editor-fold>
 }
