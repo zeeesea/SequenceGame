@@ -29,9 +29,8 @@ public class Sort {
             }
             return sorted;
         } catch (Exception e) {
-            System.err.println("[Sort] Error sorting list: " + e.getMessage());
             e.printStackTrace();
-            return list; // Bei Fehler, unsortierte Liste zurückgeben
+            return list;
         }
     }
     private static void mergeSort(Object[] array, int left, int right) {

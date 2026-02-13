@@ -103,7 +103,6 @@ public class UIManager extends GameObject {
         }
     }
     private void setupLeftUI() {
-        // Skalierungsfaktor berechnen
         float scaleX = (float) getScreenWidth() / BASE_WIDTH;
         float scaleY = (float) getScreenHeight() / BASE_HEIGHT;
 

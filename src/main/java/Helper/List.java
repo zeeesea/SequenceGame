@@ -4,10 +4,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 /**
- * An iterable, generic, doubly linked list. It has a first, last, and current element.
- * Therefore, you have access to all the elements the list contains.
- *
- * @param <T> the content type of the list
+ * Doubly linked list with first, last and current pointer.
+ * @param <T> content type
  */
 public class List<T> implements Iterable<T> {
     //Variables
@@ -74,7 +72,6 @@ public class List<T> implements Iterable<T> {
             first = newNode;
             last = newNode;
         } else if (current == null) {
-            // Wenn current noch nicht definiert, dann value hinten anhängen
             append(value);
             return;
         } else if (current.prev == null){
@@ -193,8 +190,7 @@ public class List<T> implements Iterable<T> {
         return this;
     }
     /**
-     * Sets the current pointer to the previous element in the list.
-     * This works because the list is doubly linked.
+     * Sets current to the previous element.
      */
     public List<T> prev() {
         if (first == null || current == null) return this;

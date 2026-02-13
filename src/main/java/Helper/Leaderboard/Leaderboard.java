@@ -1,6 +1,7 @@
-package Helper;
+package Helper.Leaderboard;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import Helper.GameMode;
+import Helper.List;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,7 +13,7 @@ import java.util.ArrayList;
 /**
  * The Leaderboard class is a static Helper Class,
  * used to manage the leaderboard of the game, including savin and loading
- * the leaderboard data, and providing methods to add new scores and retrieve the top scores
+ * the leaderboard data, and providing methods to add new scores and get the top scores
  */
 public class Leaderboard {
     private static final ObjectMapper mapper = new ObjectMapper();
@@ -79,7 +80,6 @@ public class Leaderboard {
     }
     public static void updateJSONFile() {
         try {
-            // Konvertiere zu ArrayList, damit Jackson die Elemente richtig serialisiert
             mapper.writeValue(new File(leaderboardPath), leaderboard.toArrayList());
         } catch (Exception e) {
             e.printStackTrace();
@@ -89,66 +89,5 @@ public class Leaderboard {
 
     public static List<PlayerEntry> getLeaderboard() {
         return new List<>(leaderboard);
-    }
-
-    // ---------------------- DATA CLASSES ----------------------
-    public static class PlayerEntry implements Comparable {
-        public String name;
-        public int totalClicks;
-        public int mistakes;
-        public double averageClickSpeed;
-        public double totalPlayTime;
-
-        public ArrayList<GameEntry> games = new ArrayList<>();
-
-        public PlayerEntry() {}
-        public PlayerEntry(String name) {
-            this.name = name;
-        }
-        public void addGameEntry(int score, GameMode mode, long timeStamp, double playTime, int buttonCount, double averageClickSpeed) {
-            games.add(new GameEntry(score, mode, timeStamp, playTime, buttonCount, averageClickSpeed));
-        }
-        @JsonIgnore
-        public GameEntry getHighScoreGame() {
-            if (games == null || games.isEmpty()) return null;
-            GameEntry highest = games.get(0);
-            for (GameEntry entry : games) {
-                if (entry.score > highest.score) highest = entry;
-            }
-            return highest;
-        }
-
-        @Override
-        public int compareTo(Comparable a) {
-            return Integer.compare(a.getComparableSize(), getComparableSize());
-        }
-
-        @JsonIgnore
-        @Override
-        public int getComparableSize() {
-            GameEntry highScore = getHighScoreGame();
-            if (highScore == null) return 0;
-            return highScore.score;
-        }
-    }
-
-    public static class GameEntry {
-        public int score;
-        public GameMode gameMode;
-        public long timestamp;
-        public double playTime;
-        public double averageClickSpeed;
-        public int buttonCount;
-
-        public GameEntry() {}
-
-        public GameEntry(int score, GameMode gameMode, long timestamp, double playTime, int buttonCount, double averageClickSpeed) {
-            this.score = score;
-            this.gameMode = gameMode;
-            this.timestamp = timestamp;
-            this.buttonCount = buttonCount;
-            this.playTime = playTime;
-            this.averageClickSpeed = averageClickSpeed;
-        }
     }
 }

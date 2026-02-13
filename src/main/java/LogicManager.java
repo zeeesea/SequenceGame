@@ -8,9 +8,10 @@ import GameEngine.Core.util.Console.Console;
 import GameEngine.Core.util.Timer.Timer;
 import GameEngine.Core.util.Vector2;
 import Helper.*;
+import Helper.Leaderboard.Leaderboard;
+import Helper.Leaderboard.PlayerEntry;
 import Helper.List;
 
-import javax.swing.*;
 import java.awt.*;
 
 
@@ -51,7 +52,7 @@ public class LogicManager extends GameObject {
     private float lightDuration = defaultLightDuration;
     private float flashDelay = defaultFlashDelay;
     private float levelDelay = defaultLevelDelay;
-    private int sequenceIndex = 0; // Aktuelle Position in der Sequenz
+    private int sequenceIndex = 0;
     Timer timer;
 
     // Debug Mode
@@ -450,13 +451,13 @@ public class LogicManager extends GameObject {
             int entryHeight = scale(BASE_ENTRY_HEIGHT, fontScale);
             int fontSize = scaleFont(BASE_FONT_SIZE, fontScale);
 
-            List<Leaderboard.PlayerEntry> leaderboard = Leaderboard.getLeaderboard();
-            List<Leaderboard.PlayerEntry> list = Sort.sort(leaderboard);
+            List<PlayerEntry> leaderboard = Leaderboard.getLeaderboard();
+            List<PlayerEntry> list = Sort.sort(leaderboard);
 
             int y = panelY;
             int count = 0;
 
-            for (Leaderboard.PlayerEntry entry : list) {
+            for (PlayerEntry entry : list) {
                 if (count >= MAX_ENTRIES) break;
 
                 String displayName = shortenName(entry.name);
@@ -495,12 +496,12 @@ public class LogicManager extends GameObject {
             return name.substring(0, MAX_NAME_LENGTH - 2) + "..";
         }
 
-        private static int getHighScore(Leaderboard.PlayerEntry entry) {
+        private static int getHighScore(PlayerEntry entry) {
             if (entry.getHighScoreGame() == null) return 0;
             return entry.getHighScoreGame().score;
         }
 
-        private static String getGameMode(Leaderboard.PlayerEntry entry) {
+        private static String getGameMode(PlayerEntry entry) {
             if (entry.getHighScoreGame() == null) return null;
             String s = "";
             s += entry.getHighScoreGame().gameMode.getShort();

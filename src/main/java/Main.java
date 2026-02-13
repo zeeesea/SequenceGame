@@ -35,4 +35,3 @@ public class Main extends GameEngine {
     protected void draw(Graphics2D graphics2D) {
     }
 }
-
